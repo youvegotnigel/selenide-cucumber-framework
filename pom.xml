@@ -23,6 +23,11 @@
         <cucumber.version>7.20.1</cucumber.version>
         <testng.version>7.11.0</testng.version>
         <surefire.version>3.5.2</surefire.version>
+        <cucumber.reporting.version>5.11.0</cucumber.reporting.version>
+
+        <!-- Identifies a run in the dashboard's trend history. CI overrides this
+             with the workflow run number: mvn verify -Dbuild.number=42 -->
+        <build.number>local</build.number>
     </properties>
 
     <dependencies>
@@ -69,6 +74,41 @@
                         <include>**/TestRunner.java</include>
                     </includes>
                 </configuration>
+            </plugin>
+
+            <!-- Builds a richer HTML dashboard (features/tags overview, charts, and
+                 build-over-build trends) from the cucumber.json produced by the run.
+                 Bound to the `verify` phase, so `mvn verify` runs the tests and then
+                 generates the dashboard at target/cucumber-html-reports/. -->
+            <plugin>
+                <groupId>net.masterthought</groupId>
+                <artifactId>maven-cucumber-reporting</artifactId>
+                <version>${cucumber.reporting.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-cucumber-dashboard</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <projectName>selenide-cucumber-framework</projectName>
+                            <!-- The plugin appends a "cucumber-html-reports" folder of its
+                                 own, so pointing at target/ yields target/cucumber-html-reports/. -->
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <inputDirectory>${project.build.directory}/cucumber-reports</inputDirectory>
+                            <jsonFiles>
+                                <param>**/cucumber.json</param>
+                            </jsonFiles>
+                            <!-- Labels this run in the dashboard's trend history. CI
+                                 passes the workflow run number; locally it is "local". -->
+                            <buildNumber>${build.number}</buildNumber>
+                            <!-- Never fail the build here; the test result already
+                                 decides pass/fail. This just renders the report. -->
+                            <checkBuildResult>false</checkBuildResult>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
