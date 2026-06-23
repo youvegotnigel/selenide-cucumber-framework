@@ -12,12 +12,12 @@ Feature: Login
     When the user logs in as "standard_user" with password "secret_sauce"
     Then the products page is displayed
 
-  @regression
+  @regression @negative
   Scenario: Locked out user is rejected
     When the user logs in as "locked_out_user" with password "secret_sauce"
     Then an error message containing "locked out" is shown
 
-  @regression
+  @regression @negative
   Scenario Outline: Invalid credentials are rejected
     When the user logs in as "<username>" with password "<password>"
     Then an error message is shown
