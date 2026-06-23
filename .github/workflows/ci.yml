@@ -1,0 +1,40 @@
+name: CI
+
+# Runs the test suite on every push and pull request to main.
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch: {}   # allows manual runs from the Actions tab
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # ubuntu-latest ships with Google Chrome preinstalled, and Selenium
+      # Manager (bundled with Selenide) resolves the matching driver at runtime,
+      # so there is nothing else to install.
+      - name: Run tests (headless)
+        run: mvn -B test "-Dselenide.headless=true"
+
+      # Publish the Cucumber report even when tests fail, so failures (with their
+      # attached screenshots) can be inspected from the workflow run.
+      - name: Upload Cucumber report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report
+          path: target/cucumber-reports/
+          if-no-files-found: ignore
