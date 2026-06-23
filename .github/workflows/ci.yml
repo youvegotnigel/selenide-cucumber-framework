@@ -85,6 +85,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Creates the Pages site on first run (enablement: true) so the deploy
+      # below doesn't 404. Equivalent to setting Settings → Pages → Source to
+      # "GitHub Actions" by hand.
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Deploy dashboard to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
