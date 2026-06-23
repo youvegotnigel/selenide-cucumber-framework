@@ -7,20 +7,35 @@ import org.testng.annotations.DataProvider;
 /**
  * Single entry point that wires Cucumber to TestNG.
  * <p>
- * {@code plugin = "pretty"} prints readable results to the console only. No HTML
- * or JSON report files are generated, as requested.
+ * Plugins:
+ * <ul>
+ *   <li>{@code pretty} – readable results in the console.</li>
+ *   <li>{@code html} – a self-contained report at
+ *       {@code target/cucumber-reports/cucumber.html}. Failure screenshots
+ *       attached in {@link com.saucedemo.hooks.Hooks} appear inline.</li>
+ *   <li>{@code json} – machine-readable results at
+ *       {@code target/cucumber-reports/cucumber.json} (handy for CI dashboards).</li>
+ * </ul>
  */
 @CucumberOptions(
         features = "src/test/resources/features",
         glue = {"com.saucedemo.steps", "com.saucedemo.hooks"},
-        plugin = {"pretty"}
+        plugin = {
+                "pretty",
+                "html:target/cucumber-reports/cucumber.html",
+                "json:target/cucumber-reports/cucumber.json"
+        }
 )
 public class TestRunner extends AbstractTestNGCucumberTests {
 
     /**
-     * Scenarios run sequentially here. Set {@code parallel = true} to run them in
-     * parallel; Selenide isolates each thread's browser, so that is safe once the
-     * Surefire/TestNG thread settings are configured.
+     * Scenarios run sequentially by default ({@code parallel = false}).
+     * <p>
+     * Parallel execution is wired up and safe to enable: Selenide keeps a
+     * separate browser per thread (it stores the WebDriver in a thread local),
+     * and the {@code @After} hook closes each scenario's browser independently.
+     * To turn it on, set {@code parallel = true} below and choose a thread count
+     * at run time, e.g. {@code mvn test -Ddataproviderthreadcount=4}.
      */
     @Override
     @DataProvider(parallel = false)
