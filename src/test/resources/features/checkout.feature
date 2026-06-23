@@ -4,6 +4,7 @@ Feature: Checkout
   I want to check out the items in my cart
   So that I can complete a purchase
 
+  @smoke @regression
   Scenario: Complete a purchase end to end
     Given a standard user is logged in
     And the user adds the following products to the cart:
