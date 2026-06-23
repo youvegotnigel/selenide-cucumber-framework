@@ -143,7 +143,9 @@ a single feature.
 
 ### Running only some tests (tags)
 
-Each feature file is tagged at the top so you can run them selectively:
+Scenarios are tagged on two levels so you can run them selectively.
+
+**Per-feature tags** (one per feature file):
 
 | Tag          | Feature file        |
 |--------------|---------------------|
@@ -151,18 +153,53 @@ Each feature file is tagged at the top so you can run them selectively:
 | `@inventory` | `inventory.feature` |
 | `@checkout`  | `checkout.feature`  |
 
-Run a single feature by its tag:
+**Cross-cutting tags** (group scenarios across features):
+
+| Tag           | Meaning                                                        |
+|---------------|----------------------------------------------------------------|
+| `@smoke`      | The critical happy paths – a quick confidence check.           |
+| `@regression` | The full set of scenarios.                                     |
+
+Run by tag:
 
 ```powershell
-mvn test "-Dcucumber.filter.tags=@checkout"
+mvn test "-Dcucumber.filter.tags=@checkout"     # just the checkout feature
+mvn test "-Dcucumber.filter.tags=@smoke"        # quick smoke run across features
+mvn test "-Dcucumber.filter.tags=@regression"   # the full regression set
 ```
 
 Combine tags with `and`, `or`, and `not`:
 
 ```powershell
 mvn test "-Dcucumber.filter.tags=@login or @checkout"   # either feature
+mvn test "-Dcucumber.filter.tags=@smoke and @login"     # smoke scenarios in login only
 mvn test "-Dcucumber.filter.tags=not @checkout"          # everything except checkout
 ```
+
+### Reports
+
+Every run writes a report to `target/cucumber-reports/`:
+
+- `cucumber.html` – a self-contained HTML report you can open in a browser.
+- `cucumber.json` – machine-readable results (useful for CI dashboards).
+
+If a scenario fails, a screenshot is captured and attached to that scenario, so
+it shows inline in the HTML report. (Selenide also saves screenshots to
+`build/reports/tests` by default.)
+
+### Running tests in parallel
+
+Parallel execution is wired up but **off by default** so runs stay simple and
+predictable. Selenide keeps a separate browser per thread, and each scenario
+closes its own browser, so enabling it is safe. To turn it on:
+
+1. In `src/test/java/com/saucedemo/runner/TestRunner.java`, set the data
+   provider to `@DataProvider(parallel = true)`.
+2. Choose how many scenarios run at once at run time:
+
+   ```powershell
+   mvn test "-Ddataproviderthreadcount=4"
+   ```
 
 ### Running on a different browser
 
@@ -178,16 +215,20 @@ mvn test "-Dselenide.browser=edge"
 mvn test "-Dselenide.headless=true"
 ```
 
-## What I would add next (left out on purpose)
+## Continuous integration
 
-- A reporting layer for stakeholder visibility, once reports are wanted.
-- Screenshot-on-failure is already a Selenide default; wiring it into a report is
-  the natural next step.
-- A CI pipeline (GitHub Actions / Jenkins / ADO) running
-  `mvn test "-Dselenide.headless=true"`.
-- Broader tagging (e.g. `@smoke`, `@regression`) layered on top of the
-  per-feature tags to group scenarios across features.
-- Running tests in parallel.
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the suite headless
+on every push and pull request to `main` (and on demand from the **Actions**
+tab). It checks out the code, sets up JDK 17, runs
+`mvn -B test "-Dselenide.headless=true"`, and uploads the Cucumber report as a
+build artifact so failures can be inspected from the run.
+
+## What I would add next
+
+- A richer reporting dashboard (e.g. `maven-cucumber-reporting`) with trend
+  history, built on top of the `cucumber.json` already produced.
+- Publishing the HTML report to GitHub Pages from CI for easy sharing.
+- More cross-cutting tags as the suite grows (e.g. `@negative`, `@slow`).
 
 ## References (official documentation)
 
