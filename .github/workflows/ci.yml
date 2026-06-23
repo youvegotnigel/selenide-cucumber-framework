@@ -1,12 +1,24 @@
 name: CI
 
-# Runs the test suite on every push and pull request to main.
+# Runs the test suite on every push and pull request to master, and publishes
+# the Cucumber dashboard to GitHub Pages on pushes to master.
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
   workflow_dispatch: {}   # allows manual runs from the Actions tab
+
+# Permissions the GitHub Pages deployment needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; don't cancel an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -26,15 +38,53 @@ jobs:
       # ubuntu-latest ships with Google Chrome preinstalled, and Selenium
       # Manager (bundled with Selenide) resolves the matching driver at runtime,
       # so there is nothing else to install.
+      #
+      # continue-on-error lets the report still be built and published when tests
+      # fail; the "Fail the job" step below re-asserts the real result.
       - name: Run tests (headless)
+        id: tests
+        continue-on-error: true
         run: mvn -B test "-Dselenide.headless=true"
 
-      # Publish the Cucumber report even when tests fail, so failures (with their
-      # attached screenshots) can be inspected from the workflow run.
-      - name: Upload Cucumber report
+      # Build the rich HTML dashboard from the cucumber.json produced above.
+      # -DskipTests reuses those results instead of re-running the browser.
+      # github.run_number labels this run in the dashboard's trend history.
+      - name: Build Cucumber dashboard
+        if: always()
+        run: mvn -B verify -DskipTests "-Dbuild.number=${{ github.run_number }}"
+
+      # Keep the raw report as a downloadable artifact on every run.
+      - name: Upload Cucumber report artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cucumber-report
           path: target/cucumber-reports/
           if-no-files-found: ignore
+
+      # Stage the dashboard for the Pages deploy job.
+      - name: Upload Pages artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/cucumber-html-reports
+
+      - name: Fail the job if tests failed
+        if: steps.tests.outcome == 'failure'
+        run: |
+          echo "Tests failed — see the published report for details."
+          exit 1
+
+  deploy:
+    # Publish to GitHub Pages only for pushes to master (not pull requests).
+    # always() so the report is published even when tests failed.
+    if: ${{ always() && github.event_name == 'push' }}
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy dashboard to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
