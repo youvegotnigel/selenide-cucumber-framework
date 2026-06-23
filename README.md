@@ -239,10 +239,11 @@ Cucumber dashboard, and uploads the raw report as a build artifact so failures
 can be inspected from the run.
 
 On pushes to `master` it then **publishes the dashboard to GitHub Pages**, so the
-latest results (with their trend history) are shareable via a URL. To enable it
-once: in the repository, go to **Settings → Pages** and set **Source** to
-**GitHub Actions**. The published URL appears on each `deploy` job and under the
-**github-pages** environment.
+latest results (with their trend history) are shareable via a URL. The workflow
+enables Pages automatically on its first run (`actions/configure-pages` with
+`enablement: true`). If that is blocked by repository settings, enable it by hand
+once: **Settings → Pages → Source → GitHub Actions**. The published URL appears on
+each `deploy` job and under the **github-pages** environment.
 
 ## What I would add next
 
