@@ -7,9 +7,11 @@ Feature: Inventory
   Background:
     Given a standard user is logged in
 
+  @smoke @regression
   Scenario: Inventory lists all products
     Then the product count is 6
 
+  @regression
   Scenario: Adding multiple products updates the cart badge
     When the user adds the following products to the cart:
       | Sauce Labs Backpack     |
@@ -17,6 +19,7 @@ Feature: Inventory
       | Sauce Labs Bolt T-Shirt |
     Then the cart badge shows 3
 
+  @regression
   Scenario: Shared header steps work across inventory and cart pages
     Then the header title is "Products"
     When the user adds the following products to the cart:
