@@ -155,10 +155,12 @@ Scenarios are tagged on two levels so you can run them selectively.
 
 **Cross-cutting tags** (group scenarios across features):
 
-| Tag           | Meaning                                                        |
-|---------------|----------------------------------------------------------------|
-| `@smoke`      | The critical happy paths – a quick confidence check.           |
-| `@regression` | The full set of scenarios.                                     |
+| Tag           | Meaning                                                          |
+|---------------|------------------------------------------------------------------|
+| `@smoke`      | The critical happy paths – a quick confidence check.             |
+| `@regression` | The full set of scenarios.                                       |
+| `@negative`   | Scenarios that assert error handling (rejected / invalid input). |
+| `@slow`       | Longer end-to-end journeys (e.g. the full checkout).             |
 
 Run by tag:
 
@@ -178,14 +180,27 @@ mvn test "-Dcucumber.filter.tags=not @checkout"          # everything except che
 
 ### Reports
 
-Every run writes a report to `target/cucumber-reports/`:
+Every `mvn test` run writes to `target/cucumber-reports/`:
 
 - `cucumber.html` – a self-contained HTML report you can open in a browser.
-- `cucumber.json` – machine-readable results (useful for CI dashboards).
+- `cucumber.json` – machine-readable results (the input for the dashboard below).
 
 If a scenario fails, a screenshot is captured and attached to that scenario, so
 it shows inline in the HTML report. (Selenide also saves screenshots to
 `build/reports/tests` by default.)
+
+**Rich dashboard.** Running the `verify` phase additionally builds a fuller
+dashboard (feature/tag overviews, charts, and build-over-build trends) from the
+JSON, via the [`maven-cucumber-reporting`](https://github.com/damianszczepanik/maven-cucumber-reporting)
+plugin:
+
+```powershell
+mvn verify "-Dselenide.headless=true"
+```
+
+Open the result at `target/cucumber-html-reports/overview-features.html`. Each
+run is labelled in the trend history by a build number (`local` by default;
+override with `-Dbuild.number=42`).
 
 ### Running tests in parallel
 
@@ -218,17 +233,23 @@ mvn test "-Dselenide.headless=true"
 ## Continuous integration
 
 A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the suite headless
-on every push and pull request to `main` (and on demand from the **Actions**
-tab). It checks out the code, sets up JDK 17, runs
-`mvn -B test "-Dselenide.headless=true"`, and uploads the Cucumber report as a
-build artifact so failures can be inspected from the run.
+on every push and pull request to `master` (and on demand from the **Actions**
+tab). It checks out the code, sets up JDK 17, runs the tests, builds the
+Cucumber dashboard, and uploads the raw report as a build artifact so failures
+can be inspected from the run.
+
+On pushes to `master` it then **publishes the dashboard to GitHub Pages**, so the
+latest results (with their trend history) are shareable via a URL. To enable it
+once: in the repository, go to **Settings → Pages** and set **Source** to
+**GitHub Actions**. The published URL appears on each `deploy` job and under the
+**github-pages** environment.
 
 ## What I would add next
 
-- A richer reporting dashboard (e.g. `maven-cucumber-reporting`) with trend
-  history, built on top of the `cucumber.json` already produced.
-- Publishing the HTML report to GitHub Pages from CI for easy sharing.
-- More cross-cutting tags as the suite grows (e.g. `@negative`, `@slow`).
+- API/setup steps to seed state faster (e.g. log in via the session cookie
+  instead of the UI) to keep scenarios short and focused.
+- Cross-browser runs in CI via a matrix (Chrome / Firefox / Edge).
+- A Slack/email notification on CI failure, linking to the published dashboard.
 
 ## References (official documentation)
 
