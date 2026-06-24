@@ -9,7 +9,10 @@ It was built as a learning reference. It is small enough to read from start to
 finish, and it covers four common user journeys: **login, inventory, cart, and
 checkout**.
 
-> 📊 **[View the latest test report](https://youvegotnigel.github.io/selenide-cucumber-framework/overview-features.html)** — published to GitHub Pages on every push to `master`.
+Latest test reports, published to GitHub Pages on every push to `master`:
+
+[![Allure Report](https://img.shields.io/badge/Allure-Report-fe6700?logo=qameta&logoColor=white)](https://youvegotnigel.github.io/selenide-cucumber-framework/allure/index.html)
+[![Cucumber Dashboard](https://img.shields.io/badge/Cucumber-Dashboard-23d96c?logo=cucumber&logoColor=white)](https://youvegotnigel.github.io/selenide-cucumber-framework/cucumber/overview-features.html)
 
 With Cucumber, the tests are written as readable steps like:
 
@@ -204,6 +207,21 @@ Open the result at `target/cucumber-html-reports/overview-features.html`. Each
 run is labelled in the trend history by a build number (`local` by default;
 override with `-Dbuild.number=42`).
 
+**Allure report.** The [Allure](https://allurereport.org/) Cucumber adapter is
+registered as a Cucumber plugin in `TestRunner`, so every `mvn test` run writes
+raw results to `target/allure-results` (failure screenshots are attached
+automatically). The HTML report is the **Allure 3** report, rendered by the
+`allure` npm CLI, so you need [Node.js](https://nodejs.org/) installed locally
+to build it. The test setup is unchanged: Allure 3 reads the same results the
+adapter produces.
+
+```powershell
+npx allure@3 generate target/allure-results
+```
+
+Open the result at `allure-report/index.html`, or serve it on a temporary local
+web server with `npx allure@3 open`.
+
 ### Running tests in parallel
 
 Parallel execution is wired up but **off by default** so runs stay simple and
@@ -240,13 +258,21 @@ tab). It checks out the code, sets up JDK 17, runs the tests, builds the
 Cucumber dashboard, and uploads the raw report as a build artifact so failures
 can be inspected from the run.
 
-On pushes to `master` it then **publishes the dashboard to GitHub Pages**, so the
-latest results (with their trend history) are shareable via a URL:
+On pushes to `master` it then **publishes both reports to GitHub Pages**, so the
+latest results are shareable via a URL. The two reports are combined into one
+site behind a small landing page:
 
-**📊 [View the latest test report](https://youvegotnigel.github.io/selenide-cucumber-framework/overview-features.html)**
+[![Allure Report](https://img.shields.io/badge/Allure-Report-fe6700?logo=qameta&logoColor=white)](https://youvegotnigel.github.io/selenide-cucumber-framework/allure/index.html)
+[![Cucumber Dashboard](https://img.shields.io/badge/Cucumber-Dashboard-23d96c?logo=cucumber&logoColor=white)](https://youvegotnigel.github.io/selenide-cucumber-framework/cucumber/overview-features.html)
 
-> **One-time setup:** enable Pages for the repository first —
-> **Settings → Pages → Source → GitHub Actions**. This cannot be automated: the
+| Report | URL |
+|--------|-----|
+| Landing page  | `https://youvegotnigel.github.io/selenide-cucumber-framework/` |
+| Allure report | `https://youvegotnigel.github.io/selenide-cucumber-framework/allure/index.html` |
+| Cucumber dashboard | `https://youvegotnigel.github.io/selenide-cucumber-framework/cucumber/overview-features.html` |
+
+> **One-time setup:** enable Pages for the repository first via
+> **Settings > Pages > Source > GitHub Actions**. This cannot be automated: the
 > default `GITHUB_TOKEN` is not allowed to create the Pages site, so the deploy
 > job will 404 until Pages is enabled by hand.
 
