@@ -9,6 +9,8 @@ It was built as a learning reference. It is small enough to read from start to
 finish, and it covers four common user journeys: **login, inventory, cart, and
 checkout**.
 
+> 📊 **[View the latest test report](https://youvegotnigel.github.io/selenide-cucumber-framework/overview-features.html)** — published to GitHub Pages on every push to `master`.
+
 With Cucumber, the tests are written as readable steps like:
 
 ```gherkin
@@ -239,11 +241,17 @@ Cucumber dashboard, and uploads the raw report as a build artifact so failures
 can be inspected from the run.
 
 On pushes to `master` it then **publishes the dashboard to GitHub Pages**, so the
-latest results (with their trend history) are shareable via a URL. The workflow
-enables Pages automatically on its first run (`actions/configure-pages` with
-`enablement: true`). If that is blocked by repository settings, enable it by hand
-once: **Settings → Pages → Source → GitHub Actions**. The published URL appears on
-each `deploy` job and under the **github-pages** environment.
+latest results (with their trend history) are shareable via a URL:
+
+**📊 [View the latest test report](https://youvegotnigel.github.io/selenide-cucumber-framework/overview-features.html)**
+
+> **One-time setup:** enable Pages for the repository first —
+> **Settings → Pages → Source → GitHub Actions**. This cannot be automated: the
+> default `GITHUB_TOKEN` is not allowed to create the Pages site, so the deploy
+> job will 404 until Pages is enabled by hand.
+
+Once enabled, the published URL appears on each `deploy` job and under the
+**github-pages** environment.
 
 ## What I would add next
 
