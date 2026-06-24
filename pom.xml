@@ -24,6 +24,9 @@
         <testng.version>7.11.0</testng.version>
         <surefire.version>3.5.2</surefire.version>
         <cucumber.reporting.version>5.11.0</cucumber.reporting.version>
+        <!-- Version of the Allure Cucumber adapter (allure-java line). The Allure 3
+             report is generated separately by the `allure` npm CLI; see the README. -->
+        <allure.version>2.29.0</allure.version>
 
         <!-- Identifies a run in the dashboard's trend history. CI overrides this
              with the workflow run number: mvn verify -Dbuild.number=42 -->
@@ -58,6 +61,17 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Allure adapter for Cucumber 7. Registered as a Cucumber plugin in
+             TestRunner, it writes raw results to target/allure-results, which the
+             allure-maven plugin turns into the HTML report. Scenario attachments
+             (e.g. failure screenshots) flow through automatically. -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-cucumber7-jvm</artifactId>
+            <version>${allure.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
