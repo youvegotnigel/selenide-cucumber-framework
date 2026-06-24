@@ -53,6 +53,19 @@ jobs:
         if: always()
         run: mvn -B verify -DskipTests "-Dbuild.number=${{ github.run_number }}"
 
+      # The Allure 3 report is rendered by the `allure` npm CLI, so Node is needed.
+      - name: Set up Node.js
+        if: always()
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Render the Allure 3 "Awesome" report from the target/allure-results written
+      # by the Allure Cucumber adapter during the test run. Output goes to ./allure-report.
+      - name: Build Allure report
+        if: always()
+        run: npx --yes allure@3 generate target/allure-results
+
       # Keep the raw report as a downloadable artifact on every run.
       - name: Upload Cucumber report artifact
         if: always()
@@ -62,12 +75,47 @@ jobs:
           path: target/cucumber-reports/
           if-no-files-found: ignore
 
-      # Stage the dashboard for the Pages deploy job.
+      # Combine both reports into a single site for GitHub Pages:
+      #   /             a landing page linking to both reports
+      #   /allure/      the Allure report (index.html)
+      #   /cucumber/    the maven-cucumber-reporting dashboard (overview-features.html)
+      - name: Assemble Pages site
+        if: always()
+        run: |
+          mkdir -p _site/allure _site/cucumber
+          cp -r allure-report/. _site/allure/ 2>/dev/null || true
+          cp -r target/cucumber-html-reports/. _site/cucumber/ 2>/dev/null || true
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Selenide + Cucumber test reports</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; }
+              h1 { font-size: 1.4rem; }
+              a.report { display: block; padding: 1rem 1.25rem; margin: 0.75rem 0; border: 1px solid #d0d7de;
+                         border-radius: 8px; text-decoration: none; color: #0969da; font-weight: 600; }
+              a.report:hover { background: #f6f8fa; }
+              p { color: #57606a; }
+            </style>
+          </head>
+          <body>
+            <h1>Selenide + Cucumber test reports</h1>
+            <p>Latest results from the most recent push to master.</p>
+            <a class="report" href="allure/index.html">Allure report</a>
+            <a class="report" href="cucumber/overview-features.html">Cucumber dashboard</a>
+          </body>
+          </html>
+          HTML
+
+      # Stage the combined site for the Pages deploy job.
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
-          path: target/cucumber-html-reports
+          path: _site
 
       - name: Fail the job if tests failed
         if: steps.tests.outcome == 'failure'
