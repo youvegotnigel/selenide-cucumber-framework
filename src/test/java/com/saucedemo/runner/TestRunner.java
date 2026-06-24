@@ -15,6 +15,9 @@ import org.testng.annotations.DataProvider;
  *       attached in {@link com.saucedemo.hooks.Hooks} appear inline.</li>
  *   <li>{@code json} – machine-readable results at
  *       {@code target/cucumber-reports/cucumber.json} (handy for CI dashboards).</li>
+ *   <li>{@code AllureCucumber7Jvm} – writes raw Allure results to
+ *       {@code target/allure-results}, which {@code mvn allure:report} renders
+ *       into the Allure HTML report.</li>
  * </ul>
  */
 @CucumberOptions(
@@ -23,7 +26,8 @@ import org.testng.annotations.DataProvider;
         plugin = {
                 "pretty",
                 "html:target/cucumber-reports/cucumber.html",
-                "json:target/cucumber-reports/cucumber.json"
+                "json:target/cucumber-reports/cucumber.json",
+                "io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm"
         }
 )
 public class TestRunner extends AbstractTestNGCucumberTests {
