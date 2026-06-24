@@ -180,7 +180,7 @@ Combine tags with `and`, `or`, and `not`:
 ```powershell
 mvn test "-Dcucumber.filter.tags=@login or @checkout"   # either feature
 mvn test "-Dcucumber.filter.tags=@smoke and @login"     # smoke scenarios in login only
-mvn test "-Dcucumber.filter.tags=not @checkout"          # everything except checkout
+mvn test "-Dcucumber.filter.tags=not @checkout"         # everything except checkout
 ```
 
 ### Reports
